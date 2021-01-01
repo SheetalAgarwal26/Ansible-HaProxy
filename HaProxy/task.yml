@@ -1,0 +1,73 @@
+- hosts: web_server
+  tasks:
+  - name: "Creating a directory to mount the dvd"       
+    file:
+      path: "/dvd/"
+      state: directory
+  - name: "Mount the dvd on the Directory created"    
+    mount:
+      src: "/dev/cdrom"
+      path: "/dvd/"
+      fstype: iso9660
+      state: mounted
+  - name: "Configure yum repository for AppStream"    
+    yum_repository:
+      baseurl: "file:///dvd/AppStream"
+      name: AppStream
+      description: Yum For AppStream
+      gpgcheck: no
+  - name: "Configure yum repository for BaseOS"    
+    yum_repository:
+      baseurl: "file:///dvd/BaseOS"
+      name: BaseOS
+      description: Yum For BaseOS
+      gpgcheck: no 
+  - name: "Install HTTPD Software"      
+    package:
+      name: "httpd"
+      state: "present"
+  - name: "Copy the content"    
+    copy:
+      content: "Hello This is from IP_ {{ ansible_facts['default_ipv4']['address'] }}"
+      dest: "/var/www/html/index.html"
+  - name: "Start The HTTPD Service"    
+    service:
+      name: "httpd"
+      state: started
+
+- hosts: load_balancer
+  tasks:
+  - name: "Creating a directory to mount the dvd"        
+    file:
+      path: "/dvd/"
+      state: directory
+  - name: "Mount the dvd on the Directory created"    
+    mount:
+      src: "/dev/cdrom"
+      path: "/dvd/"
+      fstype: iso9660
+      state: mounted
+  - name: "Configure yum repository for AppStream"    
+    yum_repository:
+      baseurl: "file:///dvd/AppStream"
+      name: AppStream
+      description: Yum For AppStream
+      gpgcheck: no
+  - name: "Configure yum repository for BaseOS"    
+    yum_repository:
+      baseurl: "file:///dvd/BaseOS"
+      name: BaseOS
+      description: Yum For BaseOS
+      gpgcheck: no 
+  - name: "Install HaProxy Software"      
+    package:
+      name: "haproxy"
+      state: "present"
+  - name: "Configure Configuration file for HaProxy Software"    
+    template:
+      src: "ha.conf"
+      dest: "/etc/haproxy/haproxy.cfg"
+  - name: "Start The HaProxy Service"     
+    service:
+      name: "haproxy"
+      state: "started"
